@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bypass Telegram</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Bypass Telegram</h1>
+        <p>Skip Telegram Web platform when opening the App</p>
+        <div class="button-container">
+            <button id="query_id">Get Query_ID</button>
+            <button id="user">Get User ID</button>
+        </div>
+        <div id="output" class="output-container"></div>
+    </div>
+    
+    <div id="customDialog" class="custom-dialog">
+        <div class="dialog-content">
+            <h2>Bypass Telegram</h2>
+            <p id="dialogMessage"></p>
+            <div class="input-container">
+                <input type="text" id="dialogInput" readonly>
+                <button id="copyButton">Copy</button>
+            </div>
+            <p class="instruction">Click 'Copy' to copy to clipboard, or 'OK' to close</p>
+            <div class="dialog-buttons">
+                <button id="dialogCancel">Cancel</button>
+                <button id="dialogOk">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

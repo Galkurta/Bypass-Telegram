@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Bypass Telegram",
+  "version": "1.0",
+  "description": "Bypass the Telegram Web Platform & Get Query_ID, User_ID, Token",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "webNavigation",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["scripts/telegram.js"],
+      "all_frames": true,
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "View Information",
+    "default_popup": "popup.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules.json",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  }
+}
