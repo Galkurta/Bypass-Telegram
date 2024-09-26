@@ -1,90 +1,97 @@
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('query_id').addEventListener('click', () => getInfo('query'));
-    document.getElementById('user').addEventListener('click', () => getInfo('user'));
-    document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+document.getElementById("query_id").addEventListener("click", () => {
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true,
+    },
+    (tabIds) => {
+      chrome.scripting.executeScript({
+        target: {
+          tabId: tabIds[0].id,
+        },
+        files: ["getquery.js"],
+      });
+    }
+  );
 });
 
-function getInfo(type) {
-    chrome.tabs.query({ 'active': true, 'currentWindow': true }, tabs => {
-        chrome.scripting.executeScript({
-            target: { 'tabId': tabs[0].id },
-            function: type === 'query' ? getQueryID : getUserID
-        }, (results) => {
-            if (chrome.runtime.lastError) {
-                showOutput('Error: ' + chrome.runtime.lastError.message);
-            } else if (results && results[0] && results[0].result) {
-                showCustomDialog(`Get ${type === 'query' ? 'Query_ID' : 'User ID'} successful:`, results[0].result);
-            } else {
-                showOutput(`Failed to get ${type === 'query' ? 'Query_ID' : 'User ID'}.`);
-            }
-        });
+document.getElementById("user").addEventListener("click", () => {
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true,
+    },
+    (targetTabId) => {
+      chrome.scripting.executeScript({
+        target: {
+          tabId: targetTabId[0].id,
+        },
+        files: ["getuser.js"],
+      });
+    }
+  );
+});
+
+document.getElementById("getiframe").addEventListener("click", () => {
+  chrome.tabs.query(
+    {
+      active: true,
+      currentWindow: true,
+    },
+    (tabId) => {
+      chrome.scripting.executeScript({
+        target: {
+          tabId: tabId[0].id,
+        },
+        files: ["getiframe.js"],
+      });
+    }
+  );
+});
+
+function showToast(message, type = "success") {
+  const toastContainer = document.querySelector(".toast-container");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
+
+  // Trigger reflow
+  toast.offsetHeight;
+
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", function () {
+      toast.remove();
     });
+  }, 2000);
 }
 
-function getQueryID() {
-    var iframeElement = document.querySelector('iframe');
-    if (iframeElement) {
-        var src = decodeURIComponent(iframeElement.src);
-        var query = src.split('#')[1] || '';
-        var queryParams = query.split('tgWebAppData=')[1] || '';
-        var paramsArray = queryParams.split('&');
-        var paramsObj = {};
-        paramsArray.forEach(param => {
-            var [key, value] = param.split('=');
-            if (key && value) {
-                paramsObj[key] = value;
-            }
-        });
-        var queryID = Object.keys(paramsObj).filter(key => !key.includes('tgWebApp')).map(key => `${key}=${paramsObj[key]}`).join('&');
-        return queryID;
+chrome.runtime.onMessage.addListener(
+  (fetchSearchBy, tabSearchID, tempFetchArg) => {
+    var resultsDrop = document.getElementById("requestList");
+    var inputElement = document.getElementById("requestListQuery");
+    var inputQueryRef = document.getElementById("requestListUser");
+    var processCrypto = document.getElementById("requestListIframe");
+    resultsDrop.innerHTML = "";
+    inputElement.innerHTML = "";
+    inputQueryRef.innerHTML = "";
+    processCrypto.innerHTML = "";
+
+    if (fetchSearchBy.queryIdData) {
+      showToast("Successfully retrieved Query_ID data", "success");
+    } else if (fetchSearchBy.userData) {
+      showToast("Successfully retrieved User data", "success");
+    } else if (fetchSearchBy.iframeSrcs) {
+      showToast("Successfully retrieved Iframe Source element", "success");
+    } else if (fetchSearchBy.queryerror) {
+      showToast(fetchSearchBy.queryerror, "error");
+    } else if (fetchSearchBy.usererror) {
+      showToast(fetchSearchBy.usererror, "error");
+    } else if (fetchSearchBy.iframeerror) {
+      showToast(fetchSearchBy.iframeerror, "error");
     }
-    return null;
-}
-
-function getUserID() {
-    var iframeElement = document.querySelector('iframe');
-    if (iframeElement) {
-        var src = decodeURIComponent(iframeElement.src);
-        var user = src.split('#')[1] || '';
-        var userParams = user.split('tgWebAppData=')[1] || '';
-        var paramsArray = userParams.split('&');
-        var paramsObj = {};
-        paramsArray.forEach(param => {
-            var [key, value] = param.split('=');
-            if (key && value) {
-                paramsObj[key] = value;
-            }
-        });
-        var userID = paramsObj['user'];
-        if (userID) {
-            return 'user=' + userID;
-        }
-    }
-    return null;
-}
-
-function showCustomDialog(message, value) {
-    document.getElementById('dialogMessage').textContent = message;
-    document.getElementById('dialogInput').value = value;
-    document.getElementById('customDialog').style.display = 'flex';
-
-    document.getElementById('dialogOk').onclick = () => {
-        document.getElementById('customDialog').style.display = 'none';
-    };
-
-    document.getElementById('dialogCancel').onclick = () => {
-        document.getElementById('customDialog').style.display = 'none';
-    };
-}
-
-function copyToClipboard() {
-    var copyText = document.getElementById('dialogInput');
-    copyText.select();
-    copyText.setSelectionRange(0, 99999);
-    document.execCommand('copy');
-    showOutput('Copied to clipboard!');
-}
-
-function showOutput(message) {
-    document.getElementById('output').innerText = message;
-}
+  }
+);

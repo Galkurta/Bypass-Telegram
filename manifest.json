@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Bypass Telegram",
-  "version": "1.0",
-  "description": "Bypass the Telegram Web Platform & Get Query_ID, User_ID, Token",
+  "name": "Bypass Telegram Web",
+  "version": "1.2.2",
+  "description": "Emulate Mobile on the Web version of Telegram to run Mini-Apps and Get full Data.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
     "tabs",
+    "cookies",
     "webRequest",
     "webRequestBlocking",
     "webNavigation",
@@ -15,7 +16,6 @@
     "declarativeNetRequestFeedback",
     "declarativeNetRequestWithHostAccess"
   ],
-  "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -28,16 +28,17 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "View Information",
+    "default_title": "Xem thông tin",
     "default_popup": "popup.html"
   },
   "declarative_net_request": {
     "rule_resources": [
       {
-        "id": "rules.json",
+        "id": "ruleset_1",
         "enabled": true,
         "path": "rules.json"
       }
     ]
-  }
+  },
+  "host_permissions": ["<all_urls>"]
 }

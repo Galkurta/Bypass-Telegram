@@ -1,30 +1,49 @@
-const recordedRequests = [];
-
-chrome.webRequest.onBeforeSendHeaders.addListener(details => {
-  const topLevelUrl = new URL(details.url).origin;
-  const authHeader = details.requestHeaders.find(header => header.name.toLowerCase() === 'authorization');
-  if (authHeader) {
-    const request = {
-      topLevelUrl: topLevelUrl,
-      iframeUrl: details.initiator,
-      method: details.method,
-      authorization: authHeader.value,
-      type: 'token'
-    };
-    const isRecorded = recordedRequests.some(req => req.authorization === request.authorization && req.topLevelUrl === request.topLevelUrl);
-    if (!isRecorded) {
-      recordedRequests.push(request);
-      chrome.storage.local.set({ 'recordedRequests': recordedRequests });
-      console.log('Recorded Authorization Header for iframe:', request);
+const interceptedHt = [];
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  (requestOrigin) => {
+    if (requestOrigin.requestHeaders) {
+      let defaultOrigin = "unknown";
+      if (requestOrigin.initiator) {
+        try {
+          defaultOrigin = new URL(requestOrigin.initiator).origin;
+        } catch (errorLog) {
+          console.error("Error!", errorLog);
+        }
+      }
+      let UniverseModel = {};
+      requestOrigin.requestHeaders.forEach((requestData) => {
+        if (requestData.name.toLowerCase() === "authorization") {
+          UniverseModel.authorization = requestData.value;
+        } else if (requestData.name.toLowerCase() === "x-custom-header") {
+          UniverseModel["x-custom-header"] = requestData.value;
+        } else if (requestData.name.toLowerCase() === "cookie") {
+          UniverseModel.cookie = requestData.value;
+        }
+      });
+      if (Object.keys(UniverseModel).length > 0) {
+        const httpRequest = {
+          topLevelUrl: defaultOrigin,
+          iframeUrl: requestOrigin.url,
+          method: requestOrigin.method,
+          ...UniverseModel,
+        };
+        interceptedHt.length = 0;
+        interceptedHt.push(httpRequest);
+      }
+    }
+  },
+  {
+    urls: ["<all_urls>"],
+  },
+  ["requestHeaders"]
+);
+chrome.runtime.onMessage.addListener(
+  (requestAction, interceptedHQ, resetInterceI) => {
+    if (requestAction.action === "getRecordedRequests") {
+      const resetIntersea = [...interceptedHt];
+      interceptedHt.length = 0;
+      resetInterceI(resetIntersea);
+      return true;
     }
   }
-}, { urls: ['<all_urls>'] }, ['requestHeaders']);
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Received message:', message, sender);
-  if (message.action === 'getRecordedRequests') {
-    return chrome.storage.local.get('recordedRequests', data => {
-      sendResponse(data.recordedRequests);
-    }), true;
-  }
-});
+);
